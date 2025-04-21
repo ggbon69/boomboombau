@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>溫柔女友聊天機器人</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #ffeef2;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .chat-box {
+      width: 90%;
+      max-width: 500px;
+      height: 70vh;
+      background-color: #fff;
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .chat-log {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    .message {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .user {
+      background-color: #d0eaff;
+      align-self: flex-end;
+    }
+    .bot {
+      background-color: #ffe4ec;
+      align-self: flex-start;
+    }
+    .input-box {
+      display: flex;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      margin-right: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background-color: #ff8eb6;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-box">
+    <div class="chat-log" id="chatLog"></div>
+    <div class="input-box">
+      <input type="text" id="userInput" placeholder="想和女友說什麼呢？" />
+      <button onclick="sendMessage()">送出</button>
+    </div>
+  </div>
+
+  <script>
+    const chatLog = document.getElementById('chatLog');
+
+    function addMessage(text, sender) {
+      const msg = document.createElement('div');
+      msg.className = `message ${sender}`;
+      msg.innerText = text;
+      chatLog.appendChild(msg);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const text = input.value.trim();
+      if (!text) return;
+      addMessage(text, 'user');
+      input.value = '';
+
+      const reply = await fetchGeminiReply(text);
+      addMessage(reply, 'bot');
+    }
+
+    async function fetchGeminiReply(userText) {
+      const apiKey = 'AIzaSyAU2Wu5sXdWaWm3wL777mus4zgknps4bFM'; // 請用你的 API 金鑰取代這裡
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+      const body = {
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: `請用溫柔女友的語氣回答我這段話：${userText}`
+              }
+            ]
+          }
+        ]
+      };
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '抱歉，我一時說不出話來了呢～';
+        return responseText;
+      } catch (error) {
+        return '出錯了喔～可能是連線或金鑰的問題，要不要再試一次呢？';
+      }
+    }
+  </script>
+</body>
+</html>
